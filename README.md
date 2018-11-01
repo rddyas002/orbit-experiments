@@ -1,1 +1,1 @@
-# orbit-experimentsExperimenting with GPS/SGP4 fusioninstall pippy -3 -m pip install sgp4py -3 -m pip install datetimepy -3 -m pip install julianpy -3 -m pip install -U matplotlibpy -3 -m pip install skyfield
+# orbit-experimentsExperimenting with GPS/SGP4 fusioninstall pippy -3 -m pip install sgp4py -3 -m pip install datetimepy -3 -m pip install julianpy -3 -m pip install -U matplotlibpy -3 -m pip install skyfieldpy -3 -m pip install pymap3d
