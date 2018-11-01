@@ -42,7 +42,8 @@ while counter < t_simulation:
     #print('SGP4: ',geodetic_sgp4[counter])
     counter = counter + 1
     dt = dt + timedelta(seconds=delta_t)
-    print(counter)
+    if (counter % 1000) == 0:
+        print(counter, ' seconds running')
 
 np_SGP4_position = np.array(position)
 np_SGP4_velocity = np.array(velocity)
@@ -58,7 +59,7 @@ Vx = []
 Vy = []
 Vz = []
 counter = 0
-filename = 'ReportFile1.txt'
+filename = 'data\ReportFile1.txt'
 with open(filename, 'r') as csvfile:
     reader = csv.reader(csvfile)
     for row in reader:
