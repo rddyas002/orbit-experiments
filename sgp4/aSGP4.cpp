@@ -2,7 +2,7 @@
  * File : aSGP4.c
  * Abstract:
  *       Implementation of NRossouw MSc Thesis
- *
+ *		 Using Sumbandila's orbit from 01/02/2010-07/02/2010
  *  
  * Reference for SGP4 source/headers https://celestrak.com/software/vallado-sw.asp
  */
