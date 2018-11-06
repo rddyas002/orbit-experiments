@@ -21,7 +21,8 @@ with open(filepath) as fp:
     line2 = fp.readline()
     while line2:
         sat = EarthSatellite(line1, line2, name='Sumbandila-1')
-        print("Epoch ", count, ": ", sat.epoch.utc_datetime())
+        state = sat.at(sat.epoch)
+        print("Epoch ", count, ": ", sat.epoch.utc_datetime(), " r,v: ", state.position.km, state.velocity.km_per_s)
         line1 = fp.readline()
         line2 = fp.readline()
         count = count + 1
