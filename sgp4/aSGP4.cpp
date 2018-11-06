@@ -25,20 +25,23 @@
 #include "mex.h"
 
 #define TLE_FILE    "REFERENCE.TLE"
+#define TLE_DATA	"SUMBANDILA.TLE"
+#define TLE_LOAD_MAX	25
 #define BLOCK_SAMPLE    1
 
 /* Global variables */
 elsetrec satrec;
 gravconsttype  whichconst;
 static double jdm_sim_start = 0;
-static char longstr1_tle[130];
-static char longstr2_tle[130];
+static char longstr1_tle[TLE_LOAD_MAX][130];
+static char longstr2_tle[TLE_LOAD_MAX][130];
+static int tles_loaded = 0;
 static double filter_state[4] = {0};  
 
 // main functions
 static void modifyTleParameters(double delta_param[4]);
 static void eci2kep(const double r[3], const double v[3], double *incl, double *raan, double *e, double *w);
-static void loadTLE_forSGP4();
+static void load_TLEs();
 
 // helper functions
 static real_T jday(real_T yr, real_T mon, real_T day, real_T hr, real_T b_min, real_T sec);
@@ -101,7 +104,7 @@ static void mdlInitializeSampleTimes(SimStruct *S)
     jdm_sim_start = jday(year, month, day, hour, min, sec)*24*60;
     
     /* Initialise SGP4 with TLE */
-    loadTLE_forSGP4();
+    load_TLEs();
 	
 	filter_state[0] = filter_state[1] = filter_state[2] = filter_state[3] = 0;
 }
@@ -178,7 +181,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 }
 /************************ Standard S-function interface ************************/
 
-static void loadTLE_forSGP4(){
+static void load_TLEs(){
     FILE *infile;
     double sec,  jd, rad, tsince, startmfe, stopmfe, deltamin;
     char typerun, typeinput, opsmode;
@@ -193,11 +196,16 @@ static void loadTLE_forSGP4(){
     typeinput = 'v';
     whichconst = wgs84;
     
-    /* Extract values */
-    fgets(longstr1_tle,130,infile);
-    fgets(longstr2_tle,130,infile);
+	tles_loaded = 0;
+    // load lines into buffer
+	while(infile != NULL){
+		fgets(&longstr1_tle[tles_loaded][0],130,infile);
+		fgets(&longstr2_tle[tles_loaded][0],130,infile);	
+		tles_loaded++;
+	}
+
     fclose(infile);
-    twoline2rv(longstr1_tle, longstr2_tle, typerun, typeinput, opsmode, whichconst, 
+    twoline2rv(&longstr1_tle[0][0], &longstr2_tle[0][0], typerun, typeinput, opsmode, whichconst, 
         startmfe, stopmfe, deltamin, satrec);
     
     // call the propagator to get the initial state vector value
