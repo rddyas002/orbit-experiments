@@ -1,11 +1,12 @@
 import numpy as np
+import matplotlib.pyplot as plt
 from scipy.optimize import minimize
 from scipy.optimize import Bounds
 
 from sgp4.earth_gravity import wgs84
 from sgp4.io import twoline2rv
 from sgp4.ext import days2mdhms, jday
-from sgp4.propagation import sgp4init
+from sgp4.propagation import sgp4init, sgp4
 from sgp4.model import Satellite
 
 import csv
@@ -62,7 +63,39 @@ def sgp4_compute(jdsatepoch,ecco,inclo,nodeo,argpo,mo,no,bstar,delta_min):
     afspc_mode = False
 
     sgp4init(whichconst, afspc_mode, satrec.satnum, satrec.jdsatepoch-2433281.5, satrec.bstar, satrec.ecco, satrec.argpo, satrec.inclo, satrec.mo, satrec.no, satrec.nodeo, satrec)
-    return satrec
+    return sgp4(satrec,delta_min)
+
+def read_csv_data(filepath):
+    t_gps = []
+    x_gps = []
+    v_gps = []
+
+    # read in csv file
+    with open(filepath) as csvfile:
+        csv_rows = csv.reader(csvfile, delimiter=',')
+        for row in csv_rows:
+            t_gps.append(float(row[0]))
+            x_gps.append([float(row[1]),float(row[2]),float(row[3])])
+            v_gps.append([float(row[4]),float(row[5]),float(row[6])])
+    
+    np_t = np.array(t_gps)
+    np_x_gps = np.array(x_gps)
+    np_v_gps = np.array(v_gps)    
+    return np_t, np_x_gps, np_v_gps
+
+def get_sgp4_propagation(np_t,jdsatepoch,ecco,inclo,nodeo,argpo,mo,no,bstar,delta_min):
+    x_sgp4 = []
+    v_sgp4 = []
+
+    for t in np_t:
+        delta_min = t/60
+        [r,v] = sgp4_compute(jdsatepoch,ecco,inclo,nodeo,argpo,mo,no,bstar,delta_min)
+        x_sgp4.append(r)
+        v_sgp4.append(v)
+
+    np_x_sgp4 = np.array(x_sgp4)
+    np_v_sgp4 = np.array(v_sgp4)
+    return np_t, np_x_sgp4, np_v_sgp4
 
 year = 2016
 [mon,day,hr,minute,sec] = days2mdhms(year,111.34375000)
@@ -78,22 +111,15 @@ delta_min = 0
 
 bounds = Bounds([0, 96, 180, 0, 0, 15, 1e-6], [0.1, 99, 190, 360, 360, 16, 1e-2])
 
-filepath = 'C:\\work\\MATLAB\\AOCS_Simulator\\sgp4_matlab\\EOSat1.txt'
+filepath = './/data//sat_gps.csv'
 
-t_gps = []
-x_gps = []
-v_gps = []
+[np_t, np_x_gps, np_v_gps] = read_csv_data(filepath)
+[np_t, np_x_sgp4, np_v_sgp4] = get_sgp4_propagation(np_t,jdsatepoch,ecco,inclo,nodeo,argpo,mo,no,bstar,delta_min)
 
-# read in csv file
-with open(filepath) as csvfile:
-    csv_rows = csv.reader(csvfile, delimiter=',')
-    for row in csv_rows:
-        t_gps.append(float(row[0]))
-        x_gps.append([[float(row[1])],[float(row[2])],[float(row[3])]])
-        v_gps.append([[float(row[4])],[float(row[5])],[float(row[6])]])
+np_error = np.absolute(np_x_sgp4 - np_x_gps)
 
-np_x_gps = np.array(x_gps)
-
-eosat1 = sgp4_compute(jdsatepoch,ecco,inclo,nodeo,argpo,mo,no,bstar,delta_min)
-[r,v] = eosat1.propagate(year,mon,day,hr,minute,sec)
-print(r,v)
+plt.title('GPS vs. SGP4 error')
+plt.plot(np_t/84600,np_error)
+#plt.plot(np_t/84600,np_x_sgp4,'--')
+plt.grid()
+plt.show()
