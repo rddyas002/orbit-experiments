@@ -27,4 +27,6 @@ with open(filepath) as fp:
         line2 = fp.readline()
         count = count + 1
 
-fp.close()      
+fp.close()
+
+
